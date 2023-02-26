@@ -121,6 +121,20 @@ def parse_data(f, header, nbytes):
     out = {key: array[i] for i, key in enumerate(keys)}
     return out
 
+def gen_coords(data, header):
+    if header['meshtype'] == 'rectangular':
+        xcoords = header['xmin'] + header['xstepsize'] * (1/2 + np.arange(header['xnodes']))
+        ycoords = header['ymin'] + header['ystepsize'] * (1/2 + np.arange(header['ynodes']))
+        zcoords = header['zmin'] + header['zstepsize'] * (1/2 + np.arange(header['znodes']))
+        x, y, z = np.meshgrid(xcoords, ycoords, zcoords, indexing='ij')
+        return {'x': x, 'y': y, 'z': z}
+    elif header['meshtype'] == 'irregular':
+        coords = np.einsum('i...->...i', np.array([data['x'], data['y'], data['z']]))
+        data.pop("x")
+        data.pop("y")
+        data.pop("z")
+        return coords
+
 
 def read_ovf(fname):
     fname = Path(fname)
@@ -134,8 +148,14 @@ def read_ovf(fname):
         header = parse_header(f)
         nbytes = advance_to_data_block(f)
         data = parse_data(f, header, nbytes)
-
-    return data
+    coords = gen_coords(data, header)
+    out = {
+            'data': data,
+            'coords': coords,
+            'metadata': header
+        }
+    return out
 
 if __name__ == "__main__":
-    data = read_ovf("test_ovfs/bin8_irregular.ovf")
+    data = read_ovf("test_ovfs/bin8_rectangular.ovf")
+    # data = read_ovf("test_ovfs/bin8_irregular.ovf")

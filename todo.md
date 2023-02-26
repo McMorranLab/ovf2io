@@ -1,0 +1,4 @@
+- create good format for outputs (including coordinates, etc)
+- make test suite better
+  - write header tests
+- write "write_ovf"
