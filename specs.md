@@ -40,7 +40,7 @@ Only those listed below are allowed. Order doesn't matter.
 ## Mandatory
 
 - "title": Long file name or title.
-- "meshunit": Spatial mesh unit, treated as a labe. No comments allowed.
+- "meshunit": Spatial mesh unit, treated as a label. No comments allowed.
 - "valueunits": units of the recorded values. List of units, either length "valuedim", or length one (will be applied to all values).
 - "valuedim": dimension of the recorded values. Integer, >= 1.
 - "valuelabels": list of labels for the recorded values. Length must be "valuedim", and multi-word value labels are surrounded by quotes.

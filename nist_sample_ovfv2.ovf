@@ -1,0 +1,49 @@
+# OOMMF OVF 2.0
+#
+# Segment count: 1
+#
+# Begin: Segment
+# Begin: Header
+#
+# Title: Long file name or title goes here ## and a comment
+#
+# Desc: Optional description line 1.
+# Desc: Optional description line 2.
+# Desc: ...
+#
+## Fundamental mesh measurement unit.  Treated as a label:
+# meshunit: nm
+#
+# meshtype: irregular
+# pointcount: 5      ## Number of nodes in mesh
+#
+# xmin:    0.    ## Corner points defining mesh bounding box in
+# ymin:    0.    ## 'meshunit'.  Floating point values.
+# zmin:    0.
+# xmax:   10.
+# ymax:    5.
+# zmax:    1.
+#
+# valuedim: 2    ## Value dimension
+#
+## Fundamental field value units, treated as labels (i.e., unparsed).
+## In general, there should be one label for each value dimension.
+# valueunits:  J/m^3  A/m
+# valuelabels: "Zeeman energy density"  "Anisotropy field"
+#
+# End: Header
+#
+## Each data records consists of N+3 values: the (x,y,z) node
+## location, followed by the N value components.  In this example,
+## N+3 = 5, the two value components are in units of J/m^3 and A/m,
+## corresponding to Zeeman energy density and a magneto-crystalline
+## anisotropy field, respectively.
+#
+# Begin: data text
+0.5 0.5 0.5  500.  4e4
+9.5 0.5 0.5  300.  5e3
+0.5 4.5 0.5  400.  4e4
+9.5 4.5 0.5  200.  5e3
+5.0 2.5 0.5  350.  2.1e4
+# End: data text
+# End: segment
