@@ -17,12 +17,12 @@
 # meshtype: irregular
 # pointcount: 5      ## Number of nodes in mesh
 #
-# xmin:    0.    ## Corner points defining mesh bounding box in
-# ymin:    0.    ## 'meshunit'.  Floating point values.
-# zmin:    0.
-# xmax:   10.
-# ymax:    5.
-# zmax:    1.
+# xmin:    1.    ## Corner points defining mesh bounding box in
+# ymin:    6.    ## 'meshunit'.  Floating point values.
+# zmin:    11.
+# xmax:   5.
+# ymax:    10.
+# zmax:    15.
 #
 # valuedim: 2    ## Value dimension
 #
@@ -38,12 +38,11 @@
 ## N+3 = 5, the two value components are in units of J/m^3 and A/m,
 ## corresponding to Zeeman energy density and a magneto-crystalline
 ## anisotropy field, respectively.
-#
-# Begin: data text
-0.5 0.5 0.5  500.  4e4
-9.5 0.5 0.5  300.  5e3
-0.5 4.5 0.5  400.  4e4
-9.5 4.5 0.5  200.  5e3
-5.0 2.5 0.5  350.  2.1e4
+## Begin: data text
+1.0 6.0 11.0 500. 4e4
+2.0 7.0 12.0 600. 5e4
+3.0 8.0 13.0 700. 6e4
+4.0 9.0 14.0 800. 7e4
+5.0 10.0 15.0 900. 8e4
 # End: data text
-# End: segment
+# End: Segment
