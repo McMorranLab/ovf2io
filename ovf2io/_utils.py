@@ -1,11 +1,11 @@
-from pathlib import Path
 import math
 import struct
 import shlex
 import warnings
 import numpy as np
+from . import _templates
 
-def create_header_entry(key, value, header):
+def _create_header_entry(key, value, header):
     """Create a new header entry. 
     Basically just deals with 'desc' having multiple entries.
     """
@@ -16,7 +16,7 @@ def create_header_entry(key, value, header):
         return {"desc": desc}
     return {key: value}
 
-def check_header_keys(header):
+def _check_header_keys(header):
     """Check for missing or extra header keys.
 
     Warns if extra, raises Exception if missing. 
@@ -51,7 +51,7 @@ def check_header_keys(header):
             warnings.warn(f"'{key}' is not a recognized key. ")
     return
 
-def format_header(header):
+def _format_header(header):
     """Formats the header entries. 
 
     Deals with floats, ints, and lists. 
@@ -73,15 +73,15 @@ def format_header(header):
     return header
 
 
-def parse_header(f):
+def _parse_header(f):
     header = {}
     for line in f:
         # '##' denotes the start of comments in each line
         line = line.decode("utf-8").partition("##")[0]
         # Return once end of header is found
         if line.lower().startswith("# end: header"):
-            check_header_keys(header)
-            header = format_header(header)
+            _check_header_keys(header)
+            header = _format_header(header)
             return header
         # Each line is a "key : value" pair
         # Partition gives ["before sep", "", ""] if the separator (":" in this case) is not found
@@ -90,10 +90,10 @@ def parse_header(f):
             # key is case-insensitive and spaces are ignored
             key = keyvaluepair[0].strip().lower()
             value = keyvaluepair[2].strip()
-            header.update(create_header_entry(key, value, header))
+            header.update(_create_header_entry(key, value, header))
     raise Exception("End of header not found. ")
 
-def advance_to_data_block(f):
+def _advance_to_data_block(f):
     mode = ""
     nbytes = None
     for line in f:
@@ -102,10 +102,11 @@ def advance_to_data_block(f):
             mode = line.split()[3]
             if mode.lower() == "binary":
                 nbytes = int(line.split()[4])
+                _check_first_byte(f, nbytes)
             return nbytes
     raise Exception("Beginning of data block not found. ")
 
-def parse_data(f, header, nbytes):
+def _parse_data(f, header, nbytes):
     if header['meshtype'] == 'rectangular':
         shape = (header['valuedim'], header['xnodes'], header['ynodes'], header['znodes'])
         keys = header['valuelabels']
@@ -121,7 +122,7 @@ def parse_data(f, header, nbytes):
     out = {key: array[i] for i, key in enumerate(keys)}
     return out
 
-def gen_coords(data, header):
+def _gen_coords(data, header):
     if header['meshtype'] == 'rectangular':
         xcoords = header['xmin'] + header['xstepsize'] * (1/2 + np.arange(header['xnodes']))
         ycoords = header['ymin'] + header['ystepsize'] * (1/2 + np.arange(header['ynodes']))
@@ -129,33 +130,93 @@ def gen_coords(data, header):
         x, y, z = np.meshgrid(xcoords, ycoords, zcoords, indexing='ij')
         return {'x': x, 'y': y, 'z': z}
     elif header['meshtype'] == 'irregular':
-        coords = np.einsum('i...->...i', np.array([data['x'], data['y'], data['z']]))
-        data.pop("x")
-        data.pop("y")
-        data.pop("z")
-        return coords
+        # coords = np.einsum('i...->...i', np.array([data['x'], data['y'], data['z']]))
+        x = data.pop("x")
+        y = data.pop("y")
+        z = data.pop("z")
+        return {'x': x, 'y': y, 'z': z}
+
+def _check_first_byte(f, nbytes):
+    binrep = {4: ("<f", 1234567.0), 8: ("<d", 123456789012345.0)}
+    test_value = struct.unpack(binrep[nbytes][0], f.read(nbytes))[0]
+    if test_value != binrep[nbytes][1]:
+        raise Exception("This binary file cannot be read. "
+                        "The test value does not match. ")
+    
 
 
-def read_ovf(fname):
-    fname = Path(fname)
-    with open(fname, "rb") as f:
-        if not b"2.0" in next(f):
-            raise ValueError("This file does not appear to be OVF 2.0. "
-                             "ovf2io does not support older OVF formats. ")
-        # Skip ahead to the header
-        while b"# begin: header" not in next(f).lower():
-            pass
-        header = parse_header(f)
-        nbytes = advance_to_data_block(f)
-        data = parse_data(f, header, nbytes)
-    coords = gen_coords(data, header)
-    out = {
-            'data': data,
-            'coords': coords,
-            'metadata': header
-        }
-    return out
+##################################################
+################### Write OVF #######################
+##################################################
 
-if __name__ == "__main__":
-    data = read_ovf("test_ovfs/bin8_rectangular.ovf")
-    # data = read_ovf("test_ovfs/bin8_irregular.ovf")
+def _generate_coordinates(x, y, z, shape, meshtype):
+    generated = False
+    if x is None and y is None and z is None:
+        x = np.arange(shape[0]) if meshtype == 'rectangular' else np.arange(shape[0])
+        y = np.arange(shape[1]) if meshtype == 'rectangular' else np.zeros(shape[0])
+        z = np.arange(shape[2]) if meshtype == 'rectangular' else np.zeros(shape[0])
+        generated = True
+    elif x is None or y is None or z is None:
+        raise ValueError("x, y, and z must either all be given or all omitted. ")
+    return x, y, z, generated
+
+def _generate_valueunits_list(valueunits, valuedim):
+    if len(valueunits) == 0:
+        valueunits = ["1" for a in range(valuedim)]
+    elif len(valueunits) == 1:
+        valueunits = [valueunits[0] for a in range(valuedim)]
+    elif len(valueunits) != valuedim:
+        raise ValueError("Length of valueunits must be 1 or match"
+                         " the number of data dimensions. ")
+    return shlex.join(valueunits)
+
+def _generate_valuelabels_list(valuelabels, valuedim):
+    if len(valuelabels) == 0:
+        valuelabels = [f"value_{n}" for n in range(valuedim)]
+    elif len(valuelabels) != valuedim:
+        raise ValueError("Length of valuelabels must match "
+                         "the number of data dimensions. ")
+    return shlex.join(valuelabels)
+
+def _shape_desc(desc):
+    s = "# desc: OVF file generated by ovf2io.py."
+    for line in desc:
+        s += "\n# desc: " + line
+    return s
+
+def _make_header(header, representation):
+    rep = {"text": "text", "bin4": "Binary 4", "bin8": "Binary 8"}[representation]
+    if header['meshtype'] == 'rectangular':
+        frontmatter = _templates.rectangular_template
+    else:
+        frontmatter = _templates.irregular_template
+    for key in header.keys():
+        frontmatter = frontmatter.replace(f"[{key}]", str(header[key]))
+    frontmatter = frontmatter.replace("[repr]", rep)
+    return frontmatter
+
+def _format_data(data, meshtype, x, y, z):
+    if meshtype == "rectangular":
+        reshaped = data.reshape((-1, data.shape[-1]), order='F')
+    else:
+        reshaped = np.zeros((data.shape[0], data.shape[1] + 3))
+        reshaped[:, 0] = x
+        reshaped[:, 1] = y
+        reshaped[:, 2] = z
+        reshaped[:, 3:] = data
+    return reshaped
+
+def _write_file(fname, frontmatter, representation, reshaped):
+    with open(fname, "wb") as f:
+        f.write(frontmatter.encode("utf-8"))
+        binrep = {"bin4": ("<f", 1234567.0), "bin8": ("<d", 123456789012345.0)}
+        if representation in binrep:
+            f.write(struct.pack(*binrep[representation]))
+            f.write(reshaped.astype(binrep[representation][0]).tobytes())
+            f.write("\n".encode("utf-8"))
+        else:
+            np.savetxt(f, reshaped)
+        rep = {"text": "text", "bin4": "Binary 4", "bin8": "Binary 8"}[representation]
+        f.write(f"# End: Data {rep}".encode("utf-8"))
+        f.write("\n# End: Segment".encode("utf-8"))
+

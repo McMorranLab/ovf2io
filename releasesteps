@@ -1,0 +1,33 @@
+###################### Testing ################
+cd testing
+bash test.sh
+cd ..
+
+###################### Update version #########
+update version in: setup.py, setup.cfg
+
+###################### Write docs #############
+######### (from root ovf2io directory)
+pdoc --html --force -c latex_math=True -o docs ovf2io
+mv docs/ovf2io/* docs/
+rm -r docs/ovf2io
+
+##################### VCS #####################
+git add .
+git commit -m 'commit message'
+git tag {version number}
+git push --tags
+git push origin
+
+##################### Build the Dist and upload to PyPi
+rm -rf build dist *.egg-info
+pip install --upgrade build twine
+python -m build
+python -m twine upload dist/*
+
+################### Check the install from PyPi #######
+python -m venv ivenv
+source ivenv/bin/activate
+pip install (--extra-index-url https://test.pypi.org/simple/) ovf2io
+
+Parentheses for deployment to test.pypi.org rather than pypi.org
