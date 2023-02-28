@@ -19,12 +19,12 @@
 # xmax: 1.5
 # ymax: 2.5
 # zmax: 3.5
-# xstepsize : 1
-# ystepsize : 1
-# zstepsize : 1
-# xbase : 0
-# ybase : 0
-# zbase : 0
+# xstepsize : 1.0
+# ystepsize : 1.0
+# zstepsize : 1.0
+# xbase : 0.0
+# ybase : 0.0
+# zbase : 0.0
 # xnodes : 2
 # ynodes : 3
 # znodes : 4

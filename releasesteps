@@ -4,7 +4,7 @@ bash test.sh
 cd ..
 
 ###################### Update version #########
-update version in: setup.py, setup.cfg
+update version in: setup.py, setup.cfg, pyproject.toml
 
 ###################### Write docs #############
 ######### (from root ovf2io directory)

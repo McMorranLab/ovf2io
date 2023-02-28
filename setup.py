@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
 	name = 'ovf2io',
 	packages = find_packages(),
-	version = '0.9.1',
+	version = '0.10.1',
 	author = 'William S. Parker',
 	author_email = 'will.parker0@gmail.com',
 	description = 'Utility for reading and writing OOMMF Vector Field (.ovf) format.',
