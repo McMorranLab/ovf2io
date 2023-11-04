@@ -1,6 +1,6 @@
 # ovf2io
 
-ovf2io is a barebones IO package for the OOMMF Vector Field file format (OVF).
+ovf2io is an IO package for the OOMMF Vector Field file format (OVF).
 
 # Features
 
