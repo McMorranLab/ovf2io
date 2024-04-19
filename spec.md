@@ -80,6 +80,7 @@ The size of each dimension is specified by "xnodes", "ynodes", and "znodes".
 
 For example:
 
+```
 mx(0, 0, 0) my(0, 0, 0) mz(0, 0, 0)
 mx(1, 0, 0) my(0, 0, 0) mz(0, 0, 0)
 mx(0, 0, 0) my(0, 1, 0) mz(0, 0, 0)
@@ -88,6 +89,7 @@ mx(0, 0, 0) my(0, 0, 0) mz(0, 0, 1)
 mx(1, 0, 0) my(0, 0, 0) mz(0, 0, 1)
 mx(0, 0, 0) my(0, 1, 0) mz(0, 0, 1)
 mx(1, 0, 0) my(0, 1, 0) mz(0, 0, 1)
+```
 
 ## Irregular meshes
 
@@ -95,6 +97,8 @@ The first three columns are the x, y, and z positions. The following columns are
 
 For example: 
 
+```
 0 0 0 mx(0,0,0) my(0,0,0) mz(0,0,0)
 0 3 2 mx(0,3,2) my(0,3,2) mz(0,3,2)
 1 0 1 mx(1,0,1) my(1,0,1) mz(1,0,1)
+```
